@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>找數字在什麼位 - 爬山大挑戰</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Noto+Sans+HK:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', 'Noto Sans HK', sans-serif;
+            user-select: none;
+            overflow: hidden;
+            background-color: #f0f9ff;
+        }
+
+        @keyframes bounce-idle {
+            0%, 100% { transform: translateY(0) translateX(-50%); }
+            50% { transform: translateY(-8px) translateX(-50%); }
+        }
+        
+        .idle-bounce {
+            animation: bounce-idle 2.5s infinite ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        .shake-animation {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes float-up {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-50px) scale(1.4); }
+        }
+
+        .float-text-up {
+            animation: float-up 1.5s ease-out forwards;
+        }
+
+        @keyframes cloud-move {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100vw); }
+        }
+        .cloud {
+            animation: cloud-move linear infinite;
+        }
+
+        .bg-mountain {
+            background: linear-gradient(to bottom, #7dd3fc 0%, #e0f2fe 100%);
+        }
+
+        @keyframes pop-in {
+            0% { transform: scale(0.3); opacity: 0; }
+            70% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .pop-animation {
+            animation: pop-in 0.4s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col text-slate-800 relative">
+
+    <!-- 頂部正中間主題標題 -->
+    <header class="w-full bg-sky-600 text-white shadow-md z-30 py-3 text-center flex-shrink-0">
+        <h1 class="text-2xl md:text-3xl font-black tracking-wider">找數字在什麼位</h1>
+    </header>
+
+    <!-- 角色創建介面 -->
+    <div id="setup-screen" class="fixed inset-0 bg-sky-100 z-50 flex flex-col items-center justify-center p-4 transition-opacity duration-500">
+        <div class="bg-white rounded-[2.5rem] shadow-2xl p-6 md:p-10 w-full max-w-3xl flex flex-col md:flex-row gap-8">
+            
+            <!-- 角色預覽區 -->
+            <div class="flex-1 flex flex-col items-center justify-center bg-sky-50 rounded-3xl p-6 border-4 border-sky-200 shadow-inner">
+                <h2 class="text-2xl font-black text-sky-800 mb-6 text-center">創建你的專屬登山者</h2>
+                <div id="setup-preview" class="w-32 h-40 md:w-48 md:h-60 transition-transform hover:scale-105 duration-300 drop-shadow-xl">
+                    <!-- SVG 動態生成 -->
+                </div>
+            </div>
+            
+            <!-- 選項控制區 -->
+            <div class="flex-1 flex flex-col justify-center gap-6">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-600 mb-3">性別：</h3>
+                    <div class="flex gap-4">
+                        <button onclick="setPlayerOption('gender', 'boy')" id="btn-gender-boy" class="flex-1 py-3 border-4 rounded-xl active:scale-95 transition-all text-lg font-bold">男仔 👦</button>
+                        <button onclick="setPlayerOption('gender', 'girl')" id="btn-gender-girl" class="flex-1 py-3 border-4 rounded-xl active:scale-95 transition-all text-lg font-bold">女仔 👧</button>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-600 mb-3">髮型款式：</h3>
+                    <div class="flex gap-4">
+                        <button onclick="setPlayerOption('hair', 1)" id="btn-hair-1" class="flex-1 py-3 border-4 rounded-xl active:scale-95 transition-all font-bold">款式一</button>
+                        <button onclick="setPlayerOption('hair', 2)" id="btn-hair-2" class="flex-1 py-3 border-4 rounded-xl active:scale-95 transition-all font-bold">款式二</button>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-600 mb-3">服飾顏色：</h3>
+                    <div class="flex gap-3 justify-start flex-wrap">
+                        <button onclick="setPlayerOption('color', '#ef4444')" class="w-10 h-10 rounded-full bg-red-500 border-4 border-white shadow-md"></button>
+                        <button onclick="setPlayerOption('color', '#3b82f6')" class="w-10 h-10 rounded-full bg-blue-500 border-4 border-white shadow-md"></button>
+                        <button onclick="setPlayerOption('color', '#22c55e')" class="w-10 h-10 rounded-full bg-green-500 border-4 border-white shadow-md"></button>
+                        <button onclick="setPlayerOption('color', '#f59e0b')" class="w-10 h-10 rounded-full bg-amber-500 border-4 border-white shadow-md"></button>
+                        <button onclick="setPlayerOption('color', '#a855f7')" class="w-10 h-10 rounded-full bg-purple-500 border-4 border-white shadow-md"></button>
+                        <button onclick="setPlayerOption('color', '#ec4899')" class="w-10 h-10 rounded-full bg-pink-500 border-4 border-white shadow-md"></button>
+                    </div>
+                </div>
+                <button onclick="finishSetup()" class="mt-4 w-full py-4 bg-green-500 hover:bg-green-600 text-white font-black rounded-2xl text-2xl transition-all active:scale-95 shadow-lg border-b-4 border-green-700">
+                    出發爬山！ 🧗‍♂️
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 遊戲開始前 3 秒倒數遮罩 -->
+    <div id="countdown-screen" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-40 hidden flex flex-col items-center justify-center">
+        <div id="countdown-number" class="text-9xl font-black text-amber-400 pop-animation drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]">3</div>
+        <p class="text-2xl font-black text-white mt-6 tracking-widest">準備攀登山頂...</p>
+    </div>
+
+    <!-- 主要遊戲畫面 -->
+    <div class="flex-grow flex flex-col md:flex-row overflow-hidden relative">
+        
+        <!-- 左側：登山視覺區 -->
+        <div class="h-2/5 md:h-full md:w-5/12 relative bg-mountain overflow-hidden border-b-4 md:border-b-0 md:border-r-4 border-slate-300 shadow-xl z-10 flex flex-col">
+            
+            <!-- 成績統計資訊欄 -->
+            <div class="absolute top-3 left-3 right-3 z-20 flex justify-between items-start pointer-events-none">
+                <div class="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-2xl shadow-md border-2 border-emerald-400 pointer-events-auto">
+                    <h2 class="text-sm font-bold text-slate-500">首對數量</h2>
+                    <p class="text-2xl font-black text-emerald-600"><span id="ui-first-correct">0</span> / 10</p>
+                </div>
+                <div class="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-2xl shadow-md border-2 border-rose-300 pointer-events-auto text-right">
+                    <h2 class="text-sm font-bold text-slate-500">未首對數量</h2>
+                    <p class="text-2xl font-black text-rose-500" id="ui-not-first">0</p>
+                </div>
+            </div>
+
+            <!-- 裝飾雲朵與太陽 -->
+            <div class="absolute top-4 right-8 w-14 h-14 bg-amber-400 rounded-full shadow-[0_0_35px_rgba(251,191,36,0.9)] z-0"></div>
+            <div class="absolute top-12 left-0 opacity-80 text-4xl cloud z-0" style="animation-duration: 35s;">☁️</div>
+            <div class="absolute top-28 left-0 opacity-60 text-5xl cloud z-0" style="animation-duration: 45s; animation-delay: -15s;">☁️</div>
+
+            <!-- 增高版山體 SVG -->
+            <div class="absolute bottom-0 w-full h-[92%] md:h-[95%] z-10">
+                <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full drop-shadow-2xl">
+                    <polygon points="20,40 -20,100 80,100" fill="#3cb371" opacity="0.5"/>
+                    <polygon points="60,4 5,100 120,100" fill="#2e8b57"/>
+                    <polygon points="60,4 47,24 55,20 67,26 74,18" fill="#f8fafc"/>
+                    <polyline points="15,88 30,62 45,35 60,6" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1" stroke-dasharray="2,2"/>
+                </svg>
+            </div>
+
+            <!-- 爬山角色 -->
+            <div id="climber" class="absolute z-20 transition-all duration-700 ease-in-out idle-bounce"
+                 style="bottom: 8%; left: 15%; transform: translateX(-50%);">
+                <div class="relative">
+                    <div id="climber-avatar" class="w-14 h-18 md:w-16 md:h-20"></div>
+                    <div id="score-popup-container" class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full pointer-events-none z-50"></div>
+                </div>
+            </div>
+            
+            <!-- 山頂進度條 -->
+            <div class="absolute bottom-0 left-0 w-full h-3 bg-slate-200 z-30">
+                <div id="progress-bar" class="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all duration-500 ease-out w-0"></div>
+            </div>
+        </div>
+
+        <!-- 右側：題目與答題區 -->
+        <div class="h-3/5 md:h-full md:w-7/12 bg-white flex flex-col justify-between p-4 md:p-8 relative z-0">
+            
+            <!-- 8秒計時器條 -->
+            <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden border border-slate-200 shadow-inner my-1">
+                <div id="timer-bar" class="bg-amber-400 h-full w-full transition-all linear duration-100"></div>
+            </div>
+            <div class="text-right text-xs font-bold text-slate-400 -mt-1 mb-2">
+                倒數計時：<span id="timer-text" class="text-amber-600 font-extrabold text-sm">8.0s</span>
+            </div>
+
+            <!-- 正中間題目顯示區 -->
+            <div id="question-card" class="bg-sky-50 border-4 border-sky-200 rounded-3xl p-6 text-center shadow-inner relative flex flex-col justify-center items-center flex-grow max-h-[220px]">
+                <p class="text-base md:text-lg font-bold text-slate-500 mb-2">在下方數字中：</p>
+                
+                <!-- 九位數 (1 4 4 格式，隔位距離縮小一半) -->
+                <div id="number-display" class="text-3xl md:text-5xl font-mono font-black tracking-wider text-slate-800 my-2">
+                    <!-- 程式動態生成 -->
+                </div>
+
+                <!-- 提問 -->
+                <p id="question-text" class="text-xl md:text-2xl font-black text-sky-800 mt-2">
+                    <!-- 程式動態生成 -->
+                </p>
+            </div>
+
+            <!-- 九個答案選擇區 -->
+            <div class="mt-4 mb-2">
+                <p class="text-center font-bold text-slate-400 mb-3 text-sm">請點擊正確的數位名稱：</p>
+                <div class="grid grid-cols-3 gap-3 md:gap-4 max-w-lg mx-auto" id="options-container">
+                    <!-- JavaScript 將動態生成 9 個按鈕 -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 通關/結算彈窗 -->
+    <div id="modal-overlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex justify-center items-center">
+        <div class="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl max-w-sm w-[90%] text-center transform transition-transform scale-90" id="modal-content">
+            <div class="text-6xl mb-4">🏆</div>
+            <h2 class="text-3xl font-black text-slate-800 mb-2">成功登頂！</h2>
+            <p class="text-lg font-bold text-slate-600 mb-6">太棒了！你順利完成了首 10 題挑戰並登上了最高山頂！</p>
+            
+            <div class="bg-sky-50 rounded-2xl p-4 mb-6 text-left font-bold text-slate-700 space-y-2">
+                <p>✅ 首對數量：<span id="final-first-correct" class="text-emerald-600 font-black text-xl">10</span></p>
+                <p>❌ 未首對數量：<span id="final-not-first" class="text-rose-500 font-black text-xl">0</span></p>
+            </div>
+
+            <button onclick="restartGame()" class="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-2xl text-xl transition-all active:scale-95 shadow-md border-b-4 border-emerald-700">
+                再玩一次 🚀
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const playerConfig = {
+            gender: 'boy',
+            hair: 1,
+            color: '#3b82f6'
+        };
+        let currentExpression = 'normal';
+
+        const PLACE_NAMES = ['個', '十', '百', '千', '萬', '十萬', '百萬', '千萬', '億'];
+
+        let firstTryCorrect = 0;
+        let notFirstTry = 0;
+        let currentQuestion = null;
+        
+        // 本題答題狀態
+        let hasFailedCurrentQuestion = false; // 當前題目是否曾答錯/超時
+        let isQuestionSolved = false;         // 當前題目是否已解答成功
+
+        let recentPlaces = [];
+
+        const QUESTION_DURATION = 8000;
+        let timerInterval = null;
+        let startTime = 0;
+
+        const uiFirstCorrect = document.getElementById('ui-first-correct');
+        const uiNotFirst = document.getElementById('ui-not-first');
+        const uiProgressBar = document.getElementById('progress-bar');
+        const uiClimber = document.getElementById('climber');
+        const uiNumberDisplay = document.getElementById('number-display');
+        const uiQuestionText = document.getElementById('question-text');
+        const uiOptionsContainer = document.getElementById('options-container');
+        const timerBar = document.getElementById('timer-bar');
+        const timerText = document.getElementById('timer-text');
+        const setupScreen = document.getElementById('setup-screen');
+        const countdownScreen = document.getElementById('countdown-screen');
+        const countdownNumber = document.getElementById('countdown-number');
+        const questionCard = document.getElementById('question-card');
+
+        function getClimberSVG(config, expression = 'normal') {
+            const c = config.color;
+            const hairColor = config.gender === 'boy' ? '#3d2612' : '#2b170c';
+            let face = '';
+            
+            const blush = `<circle cx="36" cy="41" r="3.5" fill="#ff7676" opacity="0.4"/>
+                           <circle cx="64" cy="41" r="3.5" fill="#ff7676" opacity="0.4"/>`;
+
+            if (expression === 'normal') {
+                face = `${blush}
+                        <circle cx="41" cy="36" r="2.8" fill="#222"/>
+                        <circle cx="59" cy="36" r="2.8" fill="#222"/>
+                        <path d="M 44 44 Q 50 49 56 44" stroke="#222" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+            } else if (expression === 'sad') {
+                face = `${blush}
+                        <circle cx="41" cy="36" r="2.8" fill="#222"/>
+                        <circle cx="59" cy="36" r="2.8" fill="#222"/>
+                        <path d="M 38 31 Q 42 33 44 32" stroke="#222" stroke-width="2" fill="none"/>
+                        <path d="M 62 31 Q 58 33 56 32" stroke="#222" stroke-width="2" fill="none"/>
+                        <path d="M 44 47 Q 50 42 56 47" stroke="#222" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+            } else if (expression === 'happy' || expression === 'crown') {
+                face = `${blush}
+                        <path d="M 38 36 Q 41 31 44 36" stroke="#222" stroke-width="2.8" fill="none"/>
+                        <path d="M 56 36 Q 59 31 62 36" stroke="#222" stroke-width="2.8" fill="none"/>
+                        <path d="M 43 43 Q 50 51 57 43 Z" fill="#e11d48"/>`;
+            }
+
+            let hairFront = '';
+            let hairBack = '';
+            let accessories = '';
+
+            if (config.gender === 'boy') {
+                if (config.hair === 1) {
+                    hairFront = `<path d="M 27 33 C 26 18 34 10 50 10 C 66 10 74 18 73 33 C 70 30 67 36 62 28 C 57 33 53 27 50 30 C 47 27 43 33 38 28 C 33 36 30 30 27 33 Z" fill="${hairColor}"/>`;
+                } else {
+                    hairFront = `<path d="M 27 35 C 26 17 34 9 50 9 C 66 9 74 17 73 35 C 70 29 65 24 53 29 C 50 25 47 25 44 29 C 35 24 30 29 27 35 Z" fill="${hairColor}"/>`;
+                }
+            } else {
+                if (config.hair === 1) {
+                    hairBack = `<path d="M 30 28 C 12 18 2 38 8 62 C 11 74 21 70 23 57 Z" fill="${hairColor}"/>
+                                <path d="M 70 28 C 88 18 98 38 92 62 C 89 74 79 70 77 57 Z" fill="${hairColor}"/>`;
+                    accessories = `<circle cx="28" cy="29" r="4.5" fill="${c}" /><circle cx="72" cy="29" r="4.5" fill="${c}" />`;
+                    hairFront = `<path d="M 27 36 C 26 16 34 9 50 9 C 66 9 74 16 73 36 C 70 30 64 27 50 29 C 36 27 30 30 27 36 Z" fill="${hairColor}"/>`;
+                } else {
+                    hairBack = `<path d="M 27 30 C 20 45 16 68 20 88 C 24 93 33 91 32 78 Z" fill="${hairColor}"/>
+                                <path d="M 73 30 C 80 45 84 68 80 88 C 76 93 67 91 68 78 Z" fill="${hairColor}"/>`;
+                    accessories = `<circle cx="50" cy="14" r="3.5" fill="#f43f5e" />`;
+                    hairFront = `<path d="M 27 36 C 26 16 34 9 50 9 C 66 9 74 16 73 36 C 70 30 63 26 57 29 Z" fill="${hairColor}"/>`;
+                }
+            }
+
+            let crown = expression === 'crown' ? `<polygon points="35,12 40,22 50,3 60,22 65,12 62,29 38,29" fill="#fbbf24" stroke="#d97706" stroke-width="1.8"/>` : '';
+            let body = config.gender === 'girl' 
+                ? `<path d="M 34 55 L 66 55 L 76 92 L 24 92 Z" fill="${c}"/>`
+                : `<rect x="30" y="55" width="40" height="35" rx="8" fill="${c}"/>`;
+
+            return `
+            <svg viewBox="0 0 100 120" class="w-full h-full drop-shadow-md">
+                ${hairBack}
+                <rect x="37" y="85" width="9" height="24" fill="#334155" rx="4"/>
+                <rect x="54" y="85" width="9" height="24" fill="#334155" rx="4"/>
+                ${body}
+                <circle cx="50" cy="35" r="21" fill="#ffdfc4" />
+                ${hairFront}
+                ${accessories}
+                ${face}
+                ${crown}
+            </svg>`;
+        }
+
+        function updateSetupUI() {
+            const btnBoy = document.getElementById('btn-gender-boy');
+            const btnGirl = document.getElementById('btn-gender-girl');
+            const btnHair1 = document.getElementById('btn-hair-1');
+            const btnHair2 = document.getElementById('btn-hair-2');
+
+            btnBoy.className = playerConfig.gender === 'boy' 
+                ? "flex-1 py-3 border-4 border-sky-400 bg-sky-100 text-sky-800 font-black rounded-xl text-lg shadow-sm"
+                : "flex-1 py-3 border-4 border-slate-200 bg-slate-50 text-slate-500 font-bold rounded-xl text-lg";
+            btnGirl.className = playerConfig.gender === 'girl' 
+                ? "flex-1 py-3 border-4 border-pink-400 bg-pink-100 text-pink-800 font-black rounded-xl text-lg shadow-sm"
+                : "flex-1 py-3 border-4 border-slate-200 bg-slate-50 text-slate-500 font-bold rounded-xl text-lg";
+
+            btnHair1.className = playerConfig.hair === 1 
+                ? "flex-1 py-3 border-4 border-amber-400 bg-amber-100 text-amber-800 font-black rounded-xl"
+                : "flex-1 py-3 border-4 border-slate-200 bg-slate-50 text-slate-500 font-bold rounded-xl";
+            btnHair2.className = playerConfig.hair === 2 
+                ? "flex-1 py-3 border-4 border-amber-400 bg-amber-100 text-amber-800 font-black rounded-xl"
+                : "flex-1 py-3 border-4 border-slate-200 bg-slate-50 text-slate-500 font-bold rounded-xl";
+
+            document.getElementById('setup-preview').innerHTML = getClimberSVG(playerConfig, 'normal');
+            document.getElementById('climber-avatar').innerHTML = getClimberSVG(playerConfig, currentExpression);
+        }
+
+        function setPlayerOption(key, value) {
+            playerConfig[key] = value;
+            updateSetupUI();
+        }
+
+        function finishSetup() {
+            setupScreen.classList.add('opacity-0');
+            setTimeout(() => {
+                setupScreen.classList.add('hidden');
+                triggerCountdown(() => {
+                    initGame();
+                });
+            }, 500);
+        }
+
+        function triggerCountdown(onComplete) {
+            countdownScreen.classList.remove('hidden');
+            let count = 3;
+            
+            const updateNum = (val) => {
+                countdownNumber.classList.remove('pop-animation');
+                void countdownNumber.offsetWidth;
+                countdownNumber.innerText = val;
+                countdownNumber.classList.add('pop-animation');
+            };
+
+            updateNum("3");
+
+            const timer = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    updateNum(count);
+                } else if (count === 0) {
+                    updateNum("GO!");
+                } else {
+                    clearInterval(timer);
+                    countdownScreen.classList.add('hidden');
+                    if (onComplete) onComplete();
+                }
+            }, 1000);
+        }
+
+        function initGame() {
+            firstTryCorrect = 0;
+            notFirstTry = 0;
+            recentPlaces = [];
+            updateStatsUI();
+            renderOptionButtons();
+            nextQuestion();
+        }
+
+        // 生成九位數 (排除「個、十、百位」，只在「千、萬、十萬、百萬、千萬、億」中挑選，且 5 題內不重複)
+        function generateNineDigitQuestion() {
+            let digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+            for (let i = digits.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [digits[i], digits[j]] = [digits[j], digits[i]];
+            }
+            if (digits[0] === 0) {
+                const nonZeroIdx = digits.findIndex(d => d !== 0);
+                [digits[0], digits[nonZeroIdx]] = [digits[nonZeroIdx], digits[0]];
+            }
+
+            const numStr = digits.slice(0, 9).join('');
+            const placeMapping = ['億', '千萬', '百萬', '十萬', '萬', '千', '百', '十', '個'];
+            
+            // 允許的索引：0(億), 1(千萬), 2(百萬), 3(十萬), 4(萬), 5(千)  [排除 6(百), 7(十), 8(個)]
+            const allowedIndices = [0, 1, 2, 3, 4, 5];
+
+            // 篩選近 5 題未出現過的位
+            let availableIndices = allowedIndices.filter(idx => !recentPlaces.includes(placeMapping[idx]));
+            if (availableIndices.length === 0) {
+                availableIndices = allowedIndices;
+            }
+
+            const selectedRandomIndex = Math.floor(Math.random() * availableIndices.length);
+            const targetIndex = availableIndices[selectedRandomIndex];
+            const targetDigit = numStr[targetIndex];
+            const correctPlace = placeMapping[targetIndex];
+
+            recentPlaces.push(correctPlace);
+            if (recentPlaces.length > 5) {
+                recentPlaces.shift();
+            }
+
+            return {
+                numStr: numStr,
+                targetIndex: targetIndex,
+                targetDigit: targetDigit,
+                correctPlace: correctPlace
+            };
+        }
+
+        function renderOptionButtons() {
+            uiOptionsContainer.innerHTML = '';
+            PLACE_NAMES.forEach(place => {
+                const btn = document.createElement('button');
+                btn.className = `opt-btn bg-white hover:bg-sky-50 text-slate-700 font-black text-xl md:text-2xl py-3 md:py-4 rounded-2xl border-b-4 border-slate-300 shadow-md active:scale-95 transition-all text-center`;
+                btn.innerText = place;
+                btn.onclick = () => handleAnswer(place, btn);
+                uiOptionsContainer.appendChild(btn);
+            });
+        }
+
+        function nextQuestion() {
+            hasFailedCurrentQuestion = false;
+            isQuestionSolved = false;
+            currentQuestion = generateNineDigitQuestion();
+
+            let htmlStr = '';
+            for (let i = 0; i < 9; i++) {
+                const char = currentQuestion.numStr[i];
+                if (i === currentQuestion.targetIndex) {
+                    htmlStr += `<span class="inline-block text-amber-500 font-black underline decoration-amber-400 decoration-4 underline-offset-4 transform scale-110 mx-0.5">${char}</span>`;
+                } else {
+                    htmlStr += `<span>${char}</span>`;
+                }
+                if (i === 0) htmlStr += '&nbsp;&nbsp;';
+                if (i === 4) htmlStr += '&nbsp;&nbsp;';
+            }
+
+            uiNumberDisplay.innerHTML = htmlStr;
+            uiQuestionText.innerHTML = `數字 <span class="text-amber-500 text-3xl md:text-4xl font-black underline decoration-amber-400 decoration-4 underline-offset-4">${currentQuestion.targetDigit}</span> 在什麼位？`;
+
+            const buttons = uiOptionsContainer.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.disabled = false;
+                btn.className = `opt-btn bg-white hover:bg-sky-50 text-slate-700 font-black text-xl md:text-2xl py-3 md:py-4 rounded-2xl border-b-4 border-slate-300 shadow-md active:scale-95 transition-all text-center`;
+            });
+
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            startTime = Date.now();
+            
+            timerInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const remaining = Math.max(0, QUESTION_DURATION - elapsed);
+                const pct = (remaining / QUESTION_DURATION) * 100;
+                
+                timerBar.style.width = `${pct}%`;
+                timerText.innerText = (remaining / 1000).toFixed(1) + 's';
+
+                if (pct < 30) {
+                    timerBar.className = "bg-rose-500 h-full w-full transition-all linear duration-100";
+                } else if (pct < 60) {
+                    timerBar.className = "bg-amber-400 h-full w-full transition-all linear duration-100";
+                } else {
+                    timerBar.className = "bg-emerald-400 h-full w-full transition-all linear duration-100";
+                }
+
+                if (remaining <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeout();
+                }
+            }, 50);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        function handleAnswer(selectedPlace, btnElement) {
+            if (isQuestionSolved) return;
+
+            // 答對邏輯
+            if (selectedPlace === currentQuestion.correctPlace) {
+                isQuestionSolved = true;
+                stopTimer();
+
+                // 停用所有按鈕
+                const buttons = uiOptionsContainer.querySelectorAll('button');
+                buttons.forEach(b => b.disabled = true);
+
+                btnElement.className = "bg-emerald-500 text-white font-black text-xl md:text-2xl py-3 md:py-4 rounded-2xl border-b-4 border-emerald-700 shadow-lg text-center transform scale-105 transition-all";
+
+                if (!hasFailedCurrentQuestion) {
+                    // 第一次就答對 (首對)
+                    firstTryCorrect++;
+                    showFloatingText("+1 首對!", "text-emerald-500");
+                } else {
+                    // 補答成功
+                    showFloatingText("補答成功！", "text-emerald-500");
+                }
+
+                updateExpression('happy');
+                updateStatsUI();
+
+                if (firstTryCorrect >= 10) {
+                    setTimeout(showVictoryModal, 1200);
+                } else {
+                    setTimeout(() => {
+                        updateExpression('normal');
+                        nextQuestion();
+                    }, 1200);
+                }
+            } 
+            // 答錯邏輯 (需補答，不直接跳下一題)
+            else {
+                // 停用當前點錯的按鈕並變紅
+                btnElement.disabled = true;
+                btnElement.className = "bg-rose-400 text-white font-black text-xl md:text-2xl py-3 md:py-4 rounded-2xl border-b-4 border-rose-600 opacity-60 cursor-not-allowed text-center transition-all";
+
+                if (!hasFailedCurrentQuestion) {
+                    hasFailedCurrentQuestion = true;
+                    notFirstTry++;
+                    showFloatingText("未首對 +1", "text-rose-500");
+                    updateStatsUI();
+                }
+
+                questionCard.classList.remove('shake-animation');
+                void questionCard.offsetWidth;
+                questionCard.classList.add('shake-animation');
+
+                updateExpression('sad');
+            }
+        }
+
+        function handleTimeout() {
+            if (isQuestionSolved) return;
+
+            // 超時記一次未首對，但不跳下一題，讓小朋友繼續補答
+            if (!hasFailedCurrentQuestion) {
+                hasFailedCurrentQuestion = true;
+                notFirstTry++;
+                showFloatingText("時間到！請補答", "text-rose-500");
+                updateStatsUI();
+                updateExpression('sad');
+            }
+        }
+
+        function updateStatsUI() {
+            uiFirstCorrect.innerText = firstTryCorrect;
+            uiNotFirst.innerText = notFirstTry;
+
+            const progress = Math.min(100, (firstTryCorrect / 10) * 100);
+            uiProgressBar.style.width = `${progress}%`;
+
+            const startX = 15, endX = 60;
+            const startY = 8, endY = 86;
+
+            const currentX = startX + ((endX - startX) * (progress / 100));
+            const currentY = startY + ((endY - startY) * (progress / 100));
+
+            uiClimber.style.left = `${currentX}%`;
+            uiClimber.style.bottom = `${currentY}%`;
+        }
+
+        function updateExpression(exp) {
+            currentExpression = exp;
+            document.getElementById('climber-avatar').innerHTML = getClimberSVG(playerConfig, currentExpression);
+        }
+
+        function showFloatingText(text, colorClass) {
+            const container = document.getElementById('score-popup-container');
+            const el = document.createElement('div');
+            el.className = `font-black text-2xl md:text-3xl ${colorClass} float-text-up drop-shadow-md absolute whitespace-nowrap`;
+            el.innerText = text;
+            container.appendChild(el);
+            setTimeout(() => { if (container.contains(el)) container.removeChild(el); }, 1500);
+        }
+
+        function showVictoryModal() {
+            updateExpression('crown');
+            document.getElementById('final-first-correct').innerText = firstTryCorrect;
+            document.getElementById('final-not-first').innerText = notFirstTry;
+
+            const modalOverlay = document.getElementById('modal-overlay');
+            const modalContent = document.getElementById('modal-content');
+
+            modalOverlay.classList.remove('hidden');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-90');
+                modalContent.classList.add('scale-100');
+            }, 10);
+        }
+
+        function restartGame() {
+            const modalOverlay = document.getElementById('modal-overlay');
+            const modalContent = document.getElementById('modal-content');
+
+            modalContent.classList.remove('scale-100');
+            modalContent.classList.add('scale-90');
+            setTimeout(() => {
+                modalOverlay.classList.add('hidden');
+                updateExpression('normal');
+                triggerCountdown(() => {
+                    initGame();
+                });
+            }, 300);
+        }
+
+        window.onload = () => {
+            updateSetupUI();
+        };
+    </script>
+</body>
+</html>
